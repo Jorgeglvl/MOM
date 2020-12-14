@@ -1,63 +1,42 @@
 import java.awt.EventQueue;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
 import javax.swing.JPanel;
-import java.awt.GridLayout;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 public class ServerAdmin {
 
-	//--------------------------------------------/-------------/--------------------------------------------//
 	private JFrame frame;
 	private ServerAdmin window;
 	private ServidorMOM server;
-	private ActionListener ato;
+	private ActionListener action;
 	private JTextArea textLog;
-	//--------------------------------------------/-------------/--------------------------------------------//
 	
-	//--------------------------------------------/Paineis/Scroll/--------------------------------------------//
-	private JPanel resumoTopicos;
-	private JPanel resumoFilas;
-	private JPanel painelTopicos;
-	private JPanel painelFilas;
-	private JScrollPane scrollPT;
-	private JScrollPane scrollPF;
-	private JScrollPane scrollLog;
-	private ArrayList<JLabel> celulasFila = new ArrayList<JLabel>();
-	private ArrayList<JLabel> celulasTopico = new ArrayList<JLabel>();
-	//--------------------------------------------/-------------/--------------------------------------------//
+	private JPanel resumoTopicos, resumoFilas, painelTopicos, painelFilas;
+	private JScrollPane scrollPT, scrollPF, scrollLog;
 	
-	//--------------------------------------------/Labels/Botoes/--------------------------------------------//
-	private JLabel labelFilas;
-	private JLabel labelTopicos;
-	private JLabel apagarFila;
-	private JLabel apagarTopico;
-	private JLabel nomeFila;
-	private JLabel nomeTopico;
-	private JLabel qntMensagensFila;	
-	private JLabel labelLog;
-	private JButton addUsuario;
-	private JButton addTopico ;
-	private ArrayList<JButton> xButtonFila = new ArrayList<JButton>();
-	private ArrayList<JButton> xButtonTopico = new ArrayList<JButton>();
-	//--------------------------------------------/-------------/--------------------------------------------//
+	private ArrayList<JLabel> queueCells = new ArrayList<JLabel>();
+	private ArrayList<JLabel> topicCells = new ArrayList<JLabel>();
 	
+	private JLabel labelFilas, labelTopicos, apagarFila, apagarTopico;
+	private JLabel nomeFila, nomeTopico, qntMensagensFila, labelLog;
 	
-	public static void main(String[] args) {
-		
-		new ServerAdmin();
-	}
+	private ArrayList<JButton> jb_deleteQueue = new ArrayList<JButton>();
+	private ArrayList<JButton> jb_deleteTopic = new ArrayList<JButton>();
 
-	public ServerAdmin() {
+
+	public ServerAdmin(String ip, int port) {
 		window = this;
 		try {
-			server = new ServidorMOM(window);
+			server = new ServidorMOM(window, ip, port);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -66,7 +45,7 @@ public class ServerAdmin {
 
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 800, 460);
+		frame.setBounds(100, 100, 810, 470);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		
@@ -74,57 +53,41 @@ public class ServerAdmin {
 		iniciaLabels();
 		iniciaValores();
 		createRunnable();
-		setMensagemLog("Bem vindo ao serverMOM");
 	}
 	
 	public void atualizaInterface() {
 		
-		labelLog.setText(""+celulasFila.size());
-		labelLog.setText(""+celulasTopico.size());
+		labelLog.setText(""+queueCells.size());
+		labelLog.setText(""+topicCells.size());
 		labelLog.setText("Log");
 	}
 	
 	public void varreBotao() {
 		
-		ato = new ActionListener() {
+		action = new ActionListener() {
 			
 			public void actionPerformed(ActionEvent arg0) {
-				if(arg0.getSource() == addUsuario) {
-					//Retirado
-				}
-				if(arg0.getSource() == addTopico) {
-					String nome = Notificacao.addTopico();
-					if(nome!=null) {
-						if(!server.verificaTopicoExiste(nome)) {
-							adicionaListaTopico(nome);
-						}
-						else {
-							Notificacao.topicoExiste(nome);
-							setMensagemLog("Erro: Topico Duplicado");
-						}
-					}
-				}
-				for(int i=0;i<xButtonFila.size();i++) {
-					if(arg0.getSource() == xButtonFila.get(i)) {
+				for(int i=0;i<jb_deleteQueue.size();i++) {
+					if(arg0.getSource() == jb_deleteQueue.get(i)) {
 						if(Notificacao.confirmaApagarFila()==0) {
-							server.removeFila(celulasFila.get(i*2).getText());
-							setMensagemLog("Usuario '"+celulasFila.get(i*2).getText()+"' Deletado");
+							server.removeFila(queueCells.get(i*2).getText());
+							setMensagemLog("Usuario '"+queueCells.get(i*2).getText()+"' Deletado");
 							removeBotaoFila(i);
 							removeLabelFila(i);
 							removeLabelFila(i);
 						}
 					}
 				}
-				for(int i=0;i<xButtonTopico.size();i++) {
-					if(arg0.getSource() == xButtonTopico.get(i)) {
+				for(int i=0;i<jb_deleteTopic.size();i++) {
+					if(arg0.getSource() == jb_deleteTopic.get(i)) {
 						if(Notificacao.confirmaApagarTopico()==0) {
 							try {
-								server.produzMensagemTopico(celulasTopico.get(i).getText(), celulasTopico.get(i).getText()+"<Servidor: <fechado>");
+								server.produzMensagemTopico(topicCells.get(i).getText(), topicCells.get(i).getText()+"<Servidor: <fechado>");
 							} catch (RemoteException e) {
 								e.printStackTrace();
 							}
-							server.removeTopico(celulasTopico.get(i).getText());
-							setMensagemLog("Topico '"+celulasTopico.get(i).getText()+"' Deletado");
+							server.removeTopico(topicCells.get(i).getText());
+							setMensagemLog("Topico '"+topicCells.get(i).getText()+"' Deletado");
 							removeBotaoTopico(i);
 							removeLabelTopico(i);	
 						}
@@ -134,78 +97,75 @@ public class ServerAdmin {
 			}
 		};
 		
-		addUsuario.addActionListener(ato);
-		addTopico.addActionListener(ato);
-		
 		int i;
 		
-		for(i=0;i<xButtonFila.size();i++) {
-			xButtonFila.get(i).addActionListener(ato);
+		for(i=0;i<jb_deleteQueue.size();i++) {
+			jb_deleteQueue.get(i).addActionListener(action);
 		}
 		
-		setMensagemLog("Há "+i+" filas criadas");
+		setMensagemLog("Existem "+i+" filas criadas");
 		
-		for(i=0;i<xButtonTopico.size();i++) {
-			xButtonTopico.get(i).addActionListener(ato);
+		for(i=0;i<jb_deleteTopic.size();i++) {
+			jb_deleteTopic.get(i).addActionListener(action);
 		}
 		
-		setMensagemLog("e "+i+" topicos disponiveis");
+		setMensagemLog("Existem "+i+" topicos disponiveis");
 	}
 	
 	public void criarBotaoFila() {
-		xButtonFila.add(new JButton("X"));
-		painelFilas.add(xButtonFila.get(xButtonFila.size()-1));
+		jb_deleteQueue.add(new JButton("X"));
+		painelFilas.add(jb_deleteQueue.get(jb_deleteQueue.size()-1));
 	}
 	
 	public void criarBotaoTopico() {
-		xButtonTopico.add(new JButton("X"));
-		painelTopicos.add(xButtonTopico.get(xButtonTopico.size()-1));
+		jb_deleteTopic.add(new JButton("X"));
+		painelTopicos.add(jb_deleteTopic.get(jb_deleteTopic.size()-1));
 	}
 	
 	public void iniciaBotaoFila() {
-		xButtonFila.get(xButtonFila.size()-1).addActionListener(ato);
+		jb_deleteQueue.get(jb_deleteQueue.size()-1).addActionListener(action);
 	}
 	
 	public void iniciaBotaoTopico() {
-		xButtonTopico.get(xButtonTopico.size()-1).addActionListener(ato);
+		jb_deleteTopic.get(jb_deleteTopic.size()-1).addActionListener(action);
 	}
 	
 	public void removeBotaoFila(int i) {
-		xButtonFila.remove(i);
+		jb_deleteQueue.remove(i);
 		painelFilas.remove(i*3);
 	}
 	
 	public void removeBotaoTopico(int i) {
-		xButtonTopico.remove(i);
+		jb_deleteTopic.remove(i);
 		painelTopicos.remove(i*2);
 	}
 	
 	public void criarLabelFila(String valor) {
-		celulasFila.add(new JLabel(""+valor));
-		painelFilas.add(celulasFila.get(celulasFila.size()-1));
+		queueCells.add(new JLabel(""+valor));
+		painelFilas.add(queueCells.get(queueCells.size()-1));
 	}
 	
 	public void criarLabelTopico(String valor) {
-		celulasTopico.add(new JLabel(""+valor));
-		painelTopicos.add(celulasTopico.get(celulasTopico.size()-1));
+		topicCells.add(new JLabel(""+valor));
+		painelTopicos.add(topicCells.get(topicCells.size()-1));
 	}
 
 	public void removeLabelFila(int i) {
-		celulasFila.remove(i*2);
+		queueCells.remove(i*2);
 		painelFilas.remove(i*3);
 	}
 	
 	public void removeLabelTopico(int i) {
-		celulasTopico.remove(i);
+		topicCells.remove(i);
 		painelTopicos.remove(i*2);
 	}
 	
 	public void incrementaQntMensagem(String nomeFila) {
 		int i = 0;
-		while(i<celulasFila.size()) {
-			if(celulasFila.get(i).getText().contentEquals(nomeFila)) {
-				String valor = celulasFila.get(i+1).getText();
-				celulasFila.get(i+1).setText(""+(Integer.parseInt(valor)+1));
+		while(i<queueCells.size()) {
+			if(queueCells.get(i).getText().contentEquals(nomeFila)) {
+				String valor = queueCells.get(i+1).getText();
+				queueCells.get(i+1).setText(""+(Integer.parseInt(valor)+1));
 				setMensagemLog("Mensagem para '"+nomeFila+"' adicionada");
 			}
 			i+=2;
@@ -218,7 +178,7 @@ public class ServerAdmin {
 		criarLabelFila(nome);
 		criarLabelFila("0");
 		iniciaBotaoFila();
-		setMensagemLog("Usuário '"+nome+"' Criado");
+		setMensagemLog("Usu�rio '"+nome+"' Criado");
 	}
 	
 	public void adicionaListaTopico(String nome) {
@@ -252,21 +212,21 @@ public class ServerAdmin {
 	private void iniciaPaineis() {
 		
 		resumoFilas = new JPanel();
-		resumoFilas.setBounds(0, 0, 259, 435);
+		resumoFilas.setBounds(0, 0, 260, 435);
 		resumoFilas.setLayout(null);
 		frame.getContentPane().add(resumoFilas);
 		
 		resumoTopicos = new JPanel();
 		resumoTopicos.setLayout(null);
-		resumoTopicos.setBounds(267, 0, 259, 435);
+		resumoTopicos.setBounds(267, 0, 260, 435);
 		frame.getContentPane().add(resumoTopicos);
 		
 		scrollPF = new JScrollPane();
-		scrollPF.setBounds(12, 52, 235, 340);
+		scrollPF.setBounds(15, 50, 235, 340);
 		resumoFilas.add(scrollPF);
 		
 		scrollPT = new JScrollPane();
-		scrollPT.setBounds(12, 52, 235, 340);
+		scrollPT.setBounds(15, 50, 235, 340);
 		resumoTopicos.add(scrollPT);
 		
 		painelFilas = new JPanel();
@@ -275,14 +235,14 @@ public class ServerAdmin {
 		
 		painelTopicos = new JPanel();
 		scrollPT.setViewportView(painelTopicos);
-		painelTopicos.setLayout(new GridLayout(0, 2, 10, 10));
+		painelTopicos.setLayout(new GridLayout(0, 3, 10, 10));
 		
 		labelLog = new JLabel("Log");
-		labelLog.setBounds(645, 5, 42, 15);
+		labelLog.setBounds(645, 5, 40, 15);
 		frame.getContentPane().add(labelLog);
 		
 		scrollLog = new JScrollPane();
-		scrollLog.setBounds(534, 32, 254, 391);
+		scrollLog.setBounds(535, 30, 255, 390);
 		frame.getContentPane().add(scrollLog);
 		
 		textLog = new JTextArea();
@@ -312,17 +272,9 @@ public class ServerAdmin {
 		qntMensagensFila.setBounds(158, 33, 74, 15);
 		resumoFilas.add(qntMensagensFila);
 		
-		addUsuario = new JButton("About");
-		addUsuario.setBounds(12, 398, 235, 25);
-		resumoFilas.add(addUsuario);
-		
 		apagarFila = new JLabel("Remover");
 		apagarFila.setBounds(11, 33, 70, 15);
 		resumoFilas.add(apagarFila);
-		
-		addTopico = new JButton("Novo Topico");
-		addTopico.setBounds(12, 398, 235, 25);
-		resumoTopicos.add(addTopico);
 		
 		apagarTopico = new JLabel("Remover");
 		apagarTopico.setBounds(12, 33, 70, 15);
@@ -338,10 +290,10 @@ public class ServerAdmin {
 		}
 		ArrayList<String> listaTopicos = server.getTopicos();
 		
-		celulasFila.clear();
-		celulasTopico.clear();
-		xButtonFila.clear();
-		xButtonTopico.clear();
+		queueCells.clear();
+		topicCells.clear();
+		jb_deleteQueue.clear();
+		jb_deleteTopic.clear();
 		painelTopicos.removeAll();
 		painelFilas.removeAll();
 		

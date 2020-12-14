@@ -4,57 +4,43 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
+
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JScrollPane;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JRadioButton;
 
 public class Home {
 
-	//--------------------------------------------/-------------/--------------------------------------------//
-	private JFrame frame;
-	private Home window;
-	private Usuario usuario;
-	private ActionListener ato;
-	//--------------------------------------------/-------------/--------------------------------------------//
+	private JFrame frame, msg_frame;
+	private Home home;
+	private Client client;
 	
-	//--------------------------------------------/Paineis/Scroll/Text--------------------------------------------//
-	private JPanel resumoTopicos;
-	private JPanel resumoUsuario;
-	private JScrollPane scrollLog;
-	private JScrollPane scrollUsuario;
-	private JScrollPane scrollChat;
-	private JScrollPane scrollTopico;
+	private JPanel resumoTopicos, resumoUsuario, jp_menu;
+	private JScrollPane scrollLog, scrollUsuario, scrolljt_message, scrollTopico;
 	private JTextArea textDestino;
 	private JTextArea textUsuarios;
 	private JTextArea textLog;
 	private JTextArea textTopicos;
-	//--------------------------------------------/-------------/--------------------------------------------//
 	
-	//--------------------------------------------/Labels/Botoes/--------------------------------------------//
-	private JLabel labelUsuarios;
-	private JLabel labelTopicos;
-	private JLabel labelLog;
-	private JLabel lblNome;
-	private JLabel lblDigiteAqui;
-	private JButton assinarTopico ;
-	private JButton botaoGetUsu;
-	private JButton botaoGetTop;
-	private JTextField chat;
-	//--------------------------------------------/-------------/--------------------------------------------//
+	private JLabel jl_users, jl_topics, jl_log, jl_name, jl_message;
+	private JButton jb_subscribe, jb_listUsers, jb_listTopics, jb_newMessage;
+	private JTextField jt_message;
+
 	private JRadioButton radioUsuario;
 	private JRadioButton radioTopico;
 	private ButtonGroup radioGrupo = new ButtonGroup();
 
 	public Home(String ip, int port, String nickname) {
-		window = this;
+		home = this;
 		try {
-			usuario = new Usuario(window, ip, port, nickname);
+			client = new Client(home, ip, port, nickname);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -63,74 +49,62 @@ public class Home {
 
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 804, 575);
+		frame.setBounds(100, 100, 805, 550);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
+		frame.setResizable(false);
 		
-		iniciaPaineis();
-		iniciaLabels();
-		configuraUsuario();
-		iniciaValores();
+		initComponents();
+		configClient();
+		insertActions();
 		createRunnable();
 	}
 	
-	public void varreBotao() {
-		
-		ato = new ActionListener() {
-			
-			public void actionPerformed(ActionEvent arg0) {
-				if(arg0.getSource() == assinarTopico) {
-					String nome = Notificacao.addTopico();
-					if(nome!=null) {
-						usuario.recebeMensagem(nome, false);
-					}
-				}
-				if(arg0.getSource() == botaoGetUsu) {
-					ArrayList<String> listaUsuarios = usuario.getUsuarios();
-					setMensagemLog("Lista de usuarios existentes");
-					setMensagemLog("Legenda: * = online, - = offline");
-					for(int i=0;i<listaUsuarios.size();i++) {
-						setMensagemLog(listaUsuarios.get(i));
-					}
-				}
-				if(arg0.getSource() == botaoGetTop) {
-					ArrayList<String> listaTopicos = usuario.getTopicos();
-					setMensagemLog("Lista de topicos existentes");
-					setMensagemLog("Legenda: * = assinados, - = disponi");
-					for(int i=0;i<listaTopicos.size();i++) {
-						setMensagemLog(listaTopicos.get(i));
-					}
-				}
+    private void insertActions(){
+    	jb_subscribe.addActionListener(event -> {
+    		String nome = addTopico();
+			if(nome!=null) {
+				client.recebeMensagem(nome, false);
 			}
-		};
-		
-		assinarTopico.addActionListener(ato);
-		botaoGetUsu.addActionListener(ato);
-		botaoGetTop.addActionListener(ato);
-		
-		chat.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent arg0) {
-				String mensagem = arg0.getActionCommand();
-				if(radioUsuario.isSelected()) {
-					if(usuario.enviaMensagem(textDestino.getText(), usuario.nome+": "+mensagem, true)) {
-						textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
-					}
-				}
-				else {
-					if(usuario.enviaMensagem(textDestino.getText(), textDestino.getText()+"<"+usuario.nome+": "+mensagem, false)){
-						textTopicos.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
-					}
-				}
-				chat.setText("");
+        });
+    	
+    	jb_newMessage.addActionListener(event -> {
+    		msg_frame = new JFrame();
+    		msg_frame.setBounds(100, 100, 500, 150);
+    		msg_frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    		msg_frame.getContentPane().setLayout(null);
+    		msg_frame.setResizable(false);
+    		
+    		this.initMsg_frame();
+    		this.insertActionsMsg_frame();
+    		
+    		msg_frame.setVisible(true);
+    });
+    	
+    	jb_listUsers.addActionListener(event -> {
+    		ArrayList<String> listaUsuarios = client.getUsuarios();
+			setMensagemLog("Lista de usuarios existentes");
+			setMensagemLog("Legenda: -> = online, - = offline");
+			for(int i=0;i<listaUsuarios.size();i++) {
+				setMensagemLog(listaUsuarios.get(i));
 			}
-		});
-	}
+        });
+    	
+    	jb_listTopics.addActionListener(event -> {
+    		ArrayList<String> listaTopicos = client.getTopicos();
+			setMensagemLog("Lista de topicos existentes");
+			setMensagemLog("Legenda: -> = assinados, - = disponi");
+			for(int i=0;i<listaTopicos.size();i++) {
+				setMensagemLog(listaTopicos.get(i));
+			}
+        });
+    	
+    }
 	
 	public void recebeMensagensUsuarios() {
-		ArrayList<String> listaMensagens = usuario.recebeMensagem(usuario.nome, true);
+		ArrayList<String> listaMensagens = client.recebeMensagem(client.nickname, true);
 		while(!listaMensagens.isEmpty()) {
-			textUsuarios.append("Você<"+listaMensagens.remove(0)+"\n");
+			textUsuarios.append("Recebido de "+listaMensagens.remove(0)+"\n");
 		}
 	}
 	
@@ -143,7 +117,62 @@ public class Home {
 		textLog.setCaretPosition(textLog.getText().length());
 	}
 	
-	private void iniciaPaineis() {
+	private void initMsg_frame() {
+		radioUsuario = new JRadioButton("Usuario");
+		radioUsuario.setSelected(true);
+		radioUsuario.setBounds(10, 10, 90, 25);
+		radioGrupo.add(radioUsuario);
+		msg_frame.getContentPane().add(radioUsuario);
+		
+		radioTopico = new JRadioButton("Topico");
+		radioTopico.setBounds(100, 10, 80, 25);
+		radioGrupo.add(radioTopico);
+		msg_frame.getContentPane().add(radioTopico);
+		
+		jl_name = new JLabel("Destino:");
+		jl_name.setBounds(190, 15, 130, 15);
+		msg_frame.getContentPane().add(jl_name);
+		
+		textDestino = new JTextArea();
+		textDestino.setToolTipText("");
+		textDestino.setBounds(260, 15, 220, 20);
+		msg_frame.getContentPane().add(textDestino);
+		
+		jl_message = new JLabel("Digite sua mensagem:");
+		jl_message.setBounds(10, 60, 200, 15);
+		msg_frame.getContentPane().add(jl_message);
+		
+		scrolljt_message = new JScrollPane();
+		scrolljt_message.setBounds(10, 80, 475, 30);
+		msg_frame.getContentPane().add(scrolljt_message);
+		
+		jt_message = new JTextField();
+		scrolljt_message.setViewportView(jt_message);
+		jt_message.setColumns(10);
+		
+	}
+	
+	private void insertActionsMsg_frame(){
+		jt_message.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent arg0) {
+				String mensagem = arg0.getActionCommand();
+				if(radioUsuario.isSelected()) {
+					if(client.enviaMensagem(textDestino.getText(), client.nickname+": "+mensagem, true)) {
+						textUsuarios.append("Voc� para "+textDestino.getText()+": "+mensagem+"\n");
+					}
+				}
+				else {
+					if(client.enviaMensagem(textDestino.getText(), textDestino.getText()+"<"+client.nickname+": "+mensagem, false)){
+						textTopicos.append("Voc� para "+textDestino.getText()+": "+mensagem+"\n");
+					}
+				}
+				jt_message.setText("");
+			}
+		});
+	}
+	
+	private void initComponents() {
 		
 		resumoUsuario = new JPanel();
 		resumoUsuario.setBounds(0, 0, 259, 435);
@@ -155,127 +184,111 @@ public class Home {
 		resumoTopicos.setBounds(267, 0, 259, 435);
 		frame.getContentPane().add(resumoTopicos);
 		
-		labelLog = new JLabel("Log");
-		labelLog.setBounds(644, 5, 42, 15);
-		frame.getContentPane().add(labelLog);
+		jl_log = new JLabel("Log");
+		jl_log.setBounds(644, 5, 42, 15);
+		frame.getContentPane().add(jl_log);
 		
 		scrollLog = new JScrollPane();
-		scrollLog.setBounds(534, 32, 254, 365);
+		scrollLog.setBounds(534, 35, 255, 390);
 		frame.getContentPane().add(scrollLog);
+		
+		jp_menu = new JPanel();
+		jp_menu.setBounds(10, 450, 900, 100);
+		jp_menu.setLayout(null);
+		frame.getContentPane().add(jp_menu);		
 		
 		textLog = new JTextArea();
 		textLog.setEditable(false);
-		scrollLog.setViewportView(textLog);
+		scrollLog.setViewportView(textLog);		
 		
-		scrollChat = new JScrollPane();
-		scrollChat.setBounds(10, 510, 782, 30);
-		frame.getContentPane().add(scrollChat);
+		jl_users = new JLabel("Mensagem Usuarios");
+		jl_users.setBounds(55, 6, 152, 15);
+		resumoUsuario.add(jl_users);
 		
-		chat = new JTextField();
-		scrollChat.setViewportView(chat);
-		chat.setColumns(10);
-		
-		textDestino = new JTextArea();
-		textDestino.setToolTipText("");
-		textDestino.setBounds(331, 445, 457, 21);
-		frame.getContentPane().add(textDestino);
-		
-	}
-	
-	private void iniciaLabels() {
-		
-		labelUsuarios = new JLabel("Mensagem Usuarios");
-		labelUsuarios.setBounds(55, 6, 152, 15);
-		resumoUsuario.add(labelUsuarios);
-		
-		labelTopicos = new JLabel("Mensagem Topicos");
-		labelTopicos.setBounds(59, 6, 151, 15);
-		resumoTopicos.add(labelTopicos);
+		jl_topics = new JLabel("Mensagem Topicos");
+		jl_topics.setBounds(59, 6, 151, 15);
+		resumoTopicos.add(jl_topics);
 		
 		scrollUsuario = new JScrollPane();
-		scrollUsuario.setBounds(12, 33, 235, 390);
+		scrollUsuario.setBounds(12, 35, 235, 390);
 		resumoUsuario.add(scrollUsuario);
 		
 		textUsuarios = new JTextArea();
 		textUsuarios.setEditable(false);
 		scrollUsuario.setViewportView(textUsuarios);
 		
-		assinarTopico = new JButton("Assinar Topico");
-		assinarTopico.setBounds(12, 398, 235, 25);
-		resumoTopicos.add(assinarTopico);
+		jb_subscribe = new JButton("Insvrecer-se no Topico");
+		jb_subscribe.setBounds(0, 30, 385, 25);
+		jp_menu.add(jb_subscribe);
+		
+		jb_newMessage = new JButton("Escrever Mensagem");
+		jb_newMessage.setBounds(0, 0, 385, 25);
+		jp_menu.add(jb_newMessage);
 		
 		scrollTopico = new JScrollPane();
-		scrollTopico.setBounds(12, 33, 235, 363);
+		scrollTopico.setBounds(12, 35, 235, 390);
 		resumoTopicos.add(scrollTopico);
 		
 		textTopicos = new JTextArea();
 		textTopicos.setEditable(false);
 		scrollTopico.setViewportView(textTopicos);
 		
-		radioUsuario = new JRadioButton("Usuario");
-		radioUsuario.setSelected(true);
-		radioUsuario.setBounds(10, 443, 88, 23);
-		radioGrupo.add(radioUsuario);
-		frame.getContentPane().add(radioUsuario);
+		jb_listUsers = new JButton("Usuarios Disponiveis");
+		jb_listUsers.setBounds(390, 0, 385, 25);
+		jp_menu.add(jb_listUsers);
 		
-		radioTopico = new JRadioButton("Topico");
-		radioTopico.setBounds(102, 443, 81, 23);
-		radioGrupo.add(radioTopico);
-		frame.getContentPane().add(radioTopico);
+		jb_listTopics = new JButton("Topicos Disponiveis");
+		jb_listTopics.setBounds(390, 30, 385, 25);
+		jp_menu.add(jb_listTopics);
 		
-		lblNome = new JLabel("Nome do destino");
-		lblNome.setBounds(197, 447, 131, 15);
-		frame.getContentPane().add(lblNome);
-		
-		lblDigiteAqui = new JLabel("Digite aqui sua mensagem");
-		lblDigiteAqui.setBounds(10, 491, 201, 15);
-		frame.getContentPane().add(lblDigiteAqui);
-		
-		botaoGetUsu = new JButton("Usuarios Disponiveis");
-		botaoGetUsu.setBounds(534, 397, 254, 21);
-		frame.getContentPane().add(botaoGetUsu);
-		
-		botaoGetTop = new JButton("Topicos Disponiveis");
-		botaoGetTop.setBounds(534, 421, 254, 21);
-		frame.getContentPane().add(botaoGetTop);
-	}
-	
-	private void iniciaValores() {
-		
-		ArrayList<String> listaUsuarios = usuario.getUsuarios();
-		ArrayList<String> listaTopicos = usuario.getTopicos();
+		ArrayList<String> listaUsuarios = client.getUsuarios();
+		ArrayList<String> listaTopicos = client.getTopicos();
 		
 		recebeMensagensUsuarios();
 		
-		setMensagemLog("Bem vindo(a) "+usuario.nome);
-		setMensagemLog("Lista de usuarios existentes");
-		setMensagemLog("Legenda: * = online, - = offline");
+		setMensagemLog("Bem vindo(a) "+client.nickname);
+		setMensagemLog("Usuarios existentes:");
+		setMensagemLog("-> Usu�rios online, - Usu�rios offline");
 		for(int i=0;i<listaUsuarios.size();i++) {
 			setMensagemLog(listaUsuarios.get(i));
 		}
 		
-		setMensagemLog("Lista de topicos existentes");
+		setMensagemLog("T�picos existentes:");
 		for(int i=0;i<listaTopicos.size();i++) {
 			setMensagemLog(listaTopicos.get(i));
 		}
+		
 	}
 	
-	private void configuraUsuario() {
-		while(!usuario.solicitaConexao()) {
+	
+	private void configClient() {
+		while(!client.connect()) {
 			try {
 				Thread.sleep(20);
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e) {	
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public  String addTopico() {
+		
+		String nomeTopico = null;
+		
+		nomeTopico = JOptionPane.showInputDialog("Digite um nome para o Topico");
+		
+		while(nomeTopico!=null&&nomeTopico.contentEquals("")) {
+			nomeTopico = JOptionPane.showInputDialog("Nome inv�lido, digite um nome para o Topico");
+		}
+		
+		return nomeTopico;
 	}
 	
 	private void createRunnable() {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					window.frame.setVisible(true);
-					window.varreBotao();
+					home.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -53,11 +53,11 @@ public class Assinante implements MessageListener{
 				int indice2 = mensageSTR.indexOf(":");
 				String remetente = mensageSTR.substring(indice1, indice2);
 				if(remetente.contentEquals("Servidor")) {
-					server.listaUsuario.get(i).setMensagemTopico(mensageSTR);
+					server.getListaUsuario().get(i).setMensagemTopico(mensageSTR);
 					desconectaBroker();
 				}
 				else if(!nomeUsuario.contentEquals(remetente)) {
-					server.listaUsuario.get(i).setMensagemTopico(mensageSTR);
+					server.getListaUsuario().get(i).setMensagemTopico(mensageSTR);
 				}
 				else if(i==-1) {
 					desconectaBroker();
@@ -85,5 +85,13 @@ public class Assinante implements MessageListener{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public String getNomeUsuario() {
+		return this.nomeUsuario;
+	}
+
+	public String getNomeTopico() {
+		return this.nomeTopico;
 	}
 }

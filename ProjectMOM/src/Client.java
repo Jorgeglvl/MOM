@@ -1,21 +1,23 @@
-
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
-public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
+import javax.swing.JOptionPane;
+
+public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 	
 	private static final long serialVersionUID = 1L;
-	protected String nome;
 	private Registry registro;
 	private ServidorRemoto server;
 	private Home janela;
-	private String host, nickname;
+	private String host;
 	private int porta;
 	
-	public Usuario(Home janela, String ip, int port, String nickname) throws RemoteException{
+	public String nickname;
+	
+	public Client(Home janela, String ip, int port, String nickname) throws RemoteException{
 		this.janela = janela;
 		
 		host = ip;
@@ -27,21 +29,21 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			server = (ServidorRemoto)registro.lookup("//"+host+":"+porta+"/Servidor");
 		}
 		catch (Exception e) {
-			Notificacao.servidorNaoDisponivel();
+			JOptionPane.showMessageDialog(null, "N�o foi possivel conectar com o servidor");
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	
-	public boolean solicitaConexao(){
+	public boolean connect(){
 		
 		try {
-			nome = this.nickname;
-			if(nome!=null) {
+			
+			if(this.nickname!=null) {
 				int resposta = server.conectaUsuario(this);
 				janela.setMensagemLog("Codigo do retorno: "+resposta);
 				if(resposta==-1) {
-					Notificacao.usuarioExiste(nome);
+					JOptionPane.showMessageDialog(null, "Client '"+nickname+"' ja est� conectado existe");
 				}
 				else {
 					janela.setMensagemLog("Connectado");
@@ -54,18 +56,18 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		return false;
 	}
 	
-	public boolean enviaMensagem(String nome, String conteudoMsg, boolean tipoFila) {
+	public boolean enviaMensagem(String nickname, String conteudoMsg, boolean tipoFila) {
 		
 		try {
 			if(tipoFila) {
-				if(!server.produzMensagemFila(nome, conteudoMsg)) {
-					Notificacao.naoExisteUsuario();
+				if(!server.produzMensagemFila(nickname, conteudoMsg)) {
+					JOptionPane.showMessageDialog(null, "Usuario nao existe");
 					return false;
 				}
 			}
 			else {
-				if(!server.produzMensagemTopico(nome, conteudoMsg)) {
-					Notificacao.naoExisteTopico();
+				if(!server.produzMensagemTopico(nickname, conteudoMsg)) {
+					JOptionPane.showMessageDialog(null, "Topico nao existe");
 					return false;
 				}
 			}
@@ -75,15 +77,15 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		return true;
 	}
 	
-	public ArrayList<String> recebeMensagem(String nome, boolean tipoFila) {
+	public ArrayList<String> recebeMensagem(String nickname, boolean tipoFila) {
 		
 		try {
 			if(tipoFila) {
-				return server.recebeMensagemFila(nome);
+				return server.recebeMensagemFila(nickname);
 			}
 			else {
-				if(!server.assinaTopico(nome, this.nome)) {
-					Notificacao.topicoJaAssinado();
+				if(!server.assinaTopico(nickname, this.nickname)) {
+					JOptionPane.showMessageDialog(null, "Voc� j� est� inscrito");
 				}
 			}
 		} catch (RemoteException e) {
@@ -97,7 +99,7 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	}
 	
 	public void notificaDesconexao() throws RemoteException {
-		Notificacao.desconectado();
+		JOptionPane.showMessageDialog(null, "Voc� foi desconectado");
 		System.exit(0);
 	}
 	
@@ -124,6 +126,6 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	}
 	
 	public String getNome() throws RemoteException {
-		return nome;
+		return nickname;
 	}
 }
