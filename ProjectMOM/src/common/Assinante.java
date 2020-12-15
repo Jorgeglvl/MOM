@@ -1,3 +1,4 @@
+package common;
 
 
 import java.rmi.RemoteException;
@@ -10,6 +11,8 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
+
+import server.Server;
 
 public class Assinante implements MessageListener{
 	

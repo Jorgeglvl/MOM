@@ -1,3 +1,4 @@
+package server;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -21,6 +22,10 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+
+import common.Assinante;
+import common.RemoteClient;
+import common.RemoteServer;
 
 public class Server extends UnicastRemoteObject implements RemoteServer {
 
@@ -78,11 +83,11 @@ public class Server extends UnicastRemoteObject implements RemoteServer {
 		}
 		else if(usuarioExiste==-1) {
 			reconectaUsuario(usuario);
-			window.setMensagemLog("Usu�rio '"+nome+"' reconectado");
+			window.setMensagemLog("Usuário '"+nome+"' reconectado");
 			return 0;
 		}
 		else {
-			window.setMensagemLog("Erro: Usu�rio '"+nome+"' j� existe");
+			window.setMensagemLog("Erro: Usuário '"+nome+"' j� existe");
 			return -1;
 		}
 	}

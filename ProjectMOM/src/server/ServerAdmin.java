@@ -1,3 +1,4 @@
+package server;
 import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -187,7 +188,7 @@ public class ServerAdmin {
 		criarLabelFila(nome);
 		criarLabelFila("0");
 		iniciaBotaoFila();
-		setMensagemLog("Usuário '"+nome+"' Criado");
+		setMensagemLog("Usuario '"+nome+"' Criado");
 	}
 	
 	public void adicionaListaTopico(String nome) {

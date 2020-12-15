@@ -1,5 +1,7 @@
+package client;
 import java.awt.*;
 import javax.swing.*;
+
 import java.io.IOException;
 
 public class Login extends JFrame {
