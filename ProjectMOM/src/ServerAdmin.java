@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -16,7 +17,7 @@ public class ServerAdmin {
 
 	private JFrame frame;
 	private ServerAdmin window;
-	private ServidorMOM server;
+	private Server server;
 	private ActionListener action;
 	private JTextArea textLog;
 	
@@ -36,7 +37,7 @@ public class ServerAdmin {
 	public ServerAdmin(String ip, int port) {
 		window = this;
 		try {
-			server = new ServidorMOM(window, ip, port);
+			server = new Server(window, ip, port);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -69,7 +70,7 @@ public class ServerAdmin {
 			public void actionPerformed(ActionEvent arg0) {
 				for(int i=0;i<jb_deleteQueue.size();i++) {
 					if(arg0.getSource() == jb_deleteQueue.get(i)) {
-						if(Notificacao.confirmaApagarFila()==0) {
+						if(confirmaApagarFila()==0) {
 							server.removeFila(queueCells.get(i*2).getText());
 							setMensagemLog("Usuario '"+queueCells.get(i*2).getText()+"' Deletado");
 							removeBotaoFila(i);
@@ -80,7 +81,7 @@ public class ServerAdmin {
 				}
 				for(int i=0;i<jb_deleteTopic.size();i++) {
 					if(arg0.getSource() == jb_deleteTopic.get(i)) {
-						if(Notificacao.confirmaApagarTopico()==0) {
+						if(confirmaApagarTopico()==0) {
 							try {
 								server.produzMensagemTopico(topicCells.get(i).getText(), topicCells.get(i).getText()+"<Servidor: <fechado>");
 							} catch (RemoteException e) {
@@ -160,6 +161,14 @@ public class ServerAdmin {
 		painelTopicos.remove(i*2);
 	}
 	
+	public int confirmaApagarFila() {
+		return JOptionPane.showConfirmDialog(null, "Tem certeza?","Apagar Fila",JOptionPane.YES_NO_OPTION);
+	}
+	
+	public int confirmaApagarTopico() {
+		return JOptionPane.showConfirmDialog(null, "Tem certeza?","Apagar Topico",JOptionPane.YES_NO_OPTION);
+	}
+	
 	public void incrementaQntMensagem(String nomeFila) {
 		int i = 0;
 		while(i<queueCells.size()) {
@@ -178,7 +187,7 @@ public class ServerAdmin {
 		criarLabelFila(nome);
 		criarLabelFila("0");
 		iniciaBotaoFila();
-		setMensagemLog("Usu�rio '"+nome+"' Criado");
+		setMensagemLog("Usuário '"+nome+"' Criado");
 	}
 	
 	public void adicionaListaTopico(String nome) {

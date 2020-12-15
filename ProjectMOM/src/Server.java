@@ -22,17 +22,17 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
-public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
+public class Server extends UnicastRemoteObject implements RemoteServer {
 
 	private static final long serialVersionUID = 1L;
 	private String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 	private ActiveMQConnection conexao;
-	private ArrayList<UsuarioRemoto> listaUsuario = new ArrayList<UsuarioRemoto>();
+	private ArrayList<RemoteClient> listaUsuario = new ArrayList<RemoteClient>();
 	private ArrayList<Assinante> listaAssinates = new ArrayList<Assinante>();
 	private Registry registro;
 	private ServerAdmin window;
 	
-	public ServidorMOM(ServerAdmin window, String ip, int port) throws RemoteException {
+	public Server(ServerAdmin window, String ip, int port) throws RemoteException {
 		super();
 		this.window = window;
 		
@@ -64,7 +64,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 	}
 	
-	public int conectaUsuario(UsuarioRemoto usuario) throws RemoteException {
+	public int conectaUsuario(RemoteClient usuario) throws RemoteException {
 		
 		String nome = usuario.getNome();
 		boolean filaExiste = verificaFilaExiste(nome);
@@ -135,11 +135,11 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		return false;
 	}
 	
-	public void reconectaUsuario(UsuarioRemoto usuario) {
+	public void reconectaUsuario(RemoteClient usuario) {
 		criaUsuario(usuario);
 	}
 	
-	public void criaUsuario(UsuarioRemoto usuario) {
+	public void criaUsuario(RemoteClient usuario) {
 		getListaUsuario().add(usuario);
 	}
 	
@@ -436,11 +436,11 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		return true;
 	}
 
-	public ArrayList<UsuarioRemoto> getListaUsuario() {
+	public ArrayList<RemoteClient> getListaUsuario() {
 		return listaUsuario;
 	}
 
-	public void setListaUsuario(ArrayList<UsuarioRemoto> listaUsuario) {
+	public void setListaUsuario(ArrayList<RemoteClient> listaUsuario) {
 		this.listaUsuario = listaUsuario;
 	}
 }

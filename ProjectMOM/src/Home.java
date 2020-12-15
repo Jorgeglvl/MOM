@@ -62,7 +62,7 @@ public class Home {
 	
     private void insertActions(){
     	jb_subscribe.addActionListener(event -> {
-    		String nome = addTopico();
+    		String nome = addTopic();
 			if(nome!=null) {
 				client.recebeMensagem(nome, false);
 			}
@@ -82,18 +82,17 @@ public class Home {
     });
     	
     	jb_listUsers.addActionListener(event -> {
-    		ArrayList<String> listaUsuarios = client.getUsuarios();
-			setMensagemLog("Lista de usuarios existentes");
-			setMensagemLog("Legenda: -> = online, - = offline");
+    		ArrayList<String> listaUsuarios = client.getClients();
+			setMensagemLog("Lista de usuarios:");
+			setMensagemLog("-> para online, - para offline");
 			for(int i=0;i<listaUsuarios.size();i++) {
 				setMensagemLog(listaUsuarios.get(i));
 			}
         });
     	
     	jb_listTopics.addActionListener(event -> {
-    		ArrayList<String> listaTopicos = client.getTopicos();
-			setMensagemLog("Lista de topicos existentes");
-			setMensagemLog("Legenda: -> = assinados, - = disponi");
+    		ArrayList<String> listaTopicos = client.getTopics();
+			setMensagemLog("Lista de topicos:");
 			for(int i=0;i<listaTopicos.size();i++) {
 				setMensagemLog(listaTopicos.get(i));
 			}
@@ -159,12 +158,12 @@ public class Home {
 				String mensagem = arg0.getActionCommand();
 				if(radioUsuario.isSelected()) {
 					if(client.enviaMensagem(textDestino.getText(), client.nickname+": "+mensagem, true)) {
-						textUsuarios.append("Voc� para "+textDestino.getText()+": "+mensagem+"\n");
+						textUsuarios.append("Você para "+textDestino.getText()+": "+mensagem+"\n");
 					}
 				}
 				else {
 					if(client.enviaMensagem(textDestino.getText(), textDestino.getText()+"<"+client.nickname+": "+mensagem, false)){
-						textTopicos.append("Voc� para "+textDestino.getText()+": "+mensagem+"\n");
+						textTopicos.append("Você para "+textDestino.getText()+": "+mensagem+"\n");
 					}
 				}
 				jt_message.setText("");
@@ -241,23 +240,12 @@ public class Home {
 		jb_listTopics.setBounds(390, 30, 385, 25);
 		jp_menu.add(jb_listTopics);
 		
-		ArrayList<String> listaUsuarios = client.getUsuarios();
-		ArrayList<String> listaTopicos = client.getTopicos();
+		ArrayList<String> listaUsuarios = client.getClients();
+		ArrayList<String> listaTopicos = client.getTopics();
 		
 		recebeMensagensUsuarios();
 		
-		setMensagemLog("Bem vindo(a) "+client.nickname);
-		setMensagemLog("Usuarios existentes:");
-		setMensagemLog("-> Usu�rios online, - Usu�rios offline");
-		for(int i=0;i<listaUsuarios.size();i++) {
-			setMensagemLog(listaUsuarios.get(i));
-		}
-		
-		setMensagemLog("T�picos existentes:");
-		for(int i=0;i<listaTopicos.size();i++) {
-			setMensagemLog(listaTopicos.get(i));
-		}
-		
+		setMensagemLog("Bem vindo(a) "+client.nickname);		
 	}
 	
 	
@@ -271,14 +259,14 @@ public class Home {
 		}
 	}
 	
-	public  String addTopico() {
+	public  String addTopic() {
 		
 		String nomeTopico = null;
 		
 		nomeTopico = JOptionPane.showInputDialog("Digite um nome para o Topico");
 		
 		while(nomeTopico!=null&&nomeTopico.contentEquals("")) {
-			nomeTopico = JOptionPane.showInputDialog("Nome inv�lido, digite um nome para o Topico");
+			nomeTopico = JOptionPane.showInputDialog("Nome inválido, digite um nome para o Tópico");
 		}
 		
 		return nomeTopico;

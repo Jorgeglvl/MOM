@@ -6,11 +6,11 @@ import java.util.ArrayList;
 
 import javax.swing.JOptionPane;
 
-public class Client extends UnicastRemoteObject implements UsuarioRemoto {
+public class Client extends UnicastRemoteObject implements RemoteClient {
 	
 	private static final long serialVersionUID = 1L;
 	private Registry registro;
-	private ServidorRemoto server;
+	private RemoteServer server;
 	private Home janela;
 	private String host;
 	private int porta;
@@ -26,10 +26,10 @@ public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 		
 		try {
 			registro = LocateRegistry.getRegistry(porta);
-			server = (ServidorRemoto)registro.lookup("//"+host+":"+porta+"/Servidor");
+			server = (RemoteServer)registro.lookup("//"+host+":"+porta+"/Servidor");
 		}
 		catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "N�o foi possivel conectar com o servidor");
+			JOptionPane.showMessageDialog(null, "Não foi possivel conectar com o servidor");
 			e.printStackTrace();
 			System.exit(0);
 		}
@@ -41,12 +41,10 @@ public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 			
 			if(this.nickname!=null) {
 				int resposta = server.conectaUsuario(this);
-				janela.setMensagemLog("Codigo do retorno: "+resposta);
 				if(resposta==-1) {
-					JOptionPane.showMessageDialog(null, "Client '"+nickname+"' ja est� conectado existe");
+					JOptionPane.showMessageDialog(null, "Client '"+nickname+"' ja está conectado");
 				}
 				else {
-					janela.setMensagemLog("Connectado");
 					return true;
 				}
 			}
@@ -85,7 +83,7 @@ public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 			}
 			else {
 				if(!server.assinaTopico(nickname, this.nickname)) {
-					JOptionPane.showMessageDialog(null, "Voc� j� est� inscrito");
+					JOptionPane.showMessageDialog(null, "Você já está inscrito");
 				}
 			}
 		} catch (RemoteException e) {
@@ -99,7 +97,7 @@ public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 	}
 	
 	public void notificaDesconexao() throws RemoteException {
-		JOptionPane.showMessageDialog(null, "Voc� foi desconectado");
+		JOptionPane.showMessageDialog(null, "Você foi desconectado");
 		System.exit(0);
 	}
 	
@@ -107,7 +105,7 @@ public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 		janela.escreveMensagensTopico(mensagem);
 	}
 	
-	public ArrayList<String> getUsuarios() {
+	public ArrayList<String> getClients() {
 		try {
 			return server.getUsuariosOnline();
 		} catch (RemoteException e) {
@@ -116,7 +114,7 @@ public class Client extends UnicastRemoteObject implements UsuarioRemoto {
 		return new ArrayList<String>();
 	}
 	
-	public ArrayList<String> getTopicos() {
+	public ArrayList<String> getTopics() {
 		try {
 			return server.getTopicosDisponiveis();
 		} catch (RemoteException e) {

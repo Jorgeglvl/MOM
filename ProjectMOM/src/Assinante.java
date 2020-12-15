@@ -14,12 +14,12 @@ import org.apache.activemq.ActiveMQConnection;
 public class Assinante implements MessageListener{
 	
 	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
-	private ServidorMOM server;
+	private Server server;
 	protected String nomeUsuario;
 	protected String nomeTopico;
 	private ActiveMQConnection conexao;
 
-	public Assinante(ServidorMOM server, String nomeTopico, String nomeUsuario) {
+	public Assinante(Server server, String nomeTopico, String nomeUsuario) {
 		this.server = server;
 		this.nomeUsuario = nomeUsuario;
 		this.nomeTopico = nomeTopico;
